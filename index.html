@@ -182,7 +182,7 @@ function renderAdmin(){
   let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1])),isDir:false}));
   let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i,deleted:false,isDir:false}));
   let all=[...builtTV,...builtRadio,...customItems].filter(x=>adminCat==='All'||x.type===adminCat);
-  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\\''+x+'\\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
+  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\''+x+'\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
   let html='';
   if(adminCat==='All'||adminCat==='tv'){
     if(!fullDirectoryLoaded){
@@ -195,7 +195,7 @@ function renderAdmin(){
   const regular=all.filter(x=>!isFullDirItem(x));
   const directory=adminDirectoryOpen?all.filter(isFullDirItem):[];
   const renderItem=x=>{
-    const star=(x.type==='tv'||x.type==='radio')?'<button class="star '+(favs.includes(key(x.name,x.url))?'on':'')+'" onclick="fav(\\''+x.name.replace(/'/g,"\\\\'")+'\\',\\''+x.url.replace(/'/g,"\\\\'")+'\\')">★</button>':'';
+    const star=(x.type==='tv'||x.type==='radio')?'<button class="star '+(favs.includes(key(x.name,x.url))?'on':'')+'" onclick="fav(\''+x.name.replace(/'/g,"\\'")+'\',\''+x.url.replace(/'/g,"\\'")+'\')">★</button>':'';
     const action=x.deleted?'<span class="muted">Deleted</span>':'<button class="danger" data-type="'+esc(x.type)+'" data-name="'+esc(x.name)+'" data-url="'+esc(x.url)+'" data-index="'+(x.index??0)+'" onclick="deleteEntryFromButton(this)">Delete</button>';
     return '<div class="item"><div class="grow"><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.type)+' • '+esc(x.url)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+star+action+'</div></div>';
   };
