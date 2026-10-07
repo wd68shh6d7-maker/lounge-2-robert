@@ -172,9 +172,9 @@ function renderAdmin(){
   let html='';
   if(adminCat==='All'||adminCat==='tv'){
     if(!fullDirectoryLoaded){
-      html+='<div class="item"><div class="grow"><b>📺 Full Live TV Directory</b><div class="muted">Loading individual channels…</div></div></div>';
+      html+='<div class="item"><div class="grow"><b>📺 Full Guide</b><div class="muted">Loading individual channels…</div></div></div>';
     }else{
-      html+='<div class="item"><div class="grow"><b>📺 Full Live TV Directory</b><div class="muted">This directory cannot be deleted. Open it to manage channels individually.</div></div><button class="primary" onclick="adminDirectoryOpen=!adminDirectoryOpen;renderAdmin()">'+(adminDirectoryOpen?'Close':'Open')+'</button></div>';
+      html+='<div class="item"><div class="grow"><b>📺 Full Guide</b><div class="muted">This guide cannot be deleted as a whole. Open it to fold down every channel and delete individual channels.</div></div><button class="primary" onclick="adminDirectoryOpen=!adminDirectoryOpen;renderAdmin()">'+(adminDirectoryOpen?'▲ Close Guide':'▼ Open Full Guide')+'</button></div>';
     }
   }
   const isFullDirItem=x=>x.type==='tv'&&fullDirectory.some(d=>d[0]===x.name&&d[1]===x.url);
@@ -183,7 +183,7 @@ function renderAdmin(){
   const renderItem=x=>{
     const star=(x.type==='tv'||x.type==='radio')?'<button class="star '+(favs.includes(key(x.name,x.url))?'on':'')+'" onclick="fav(\''+x.name.replace(/'/g,"\\'")+'\',\''+x.url.replace(/'/g,"\\'")+'\')">★</button>':'';
     const action=x.deleted?'<span class="muted">Deleted</span>':'<button class="danger" data-type="'+esc(x.type)+'" data-name="'+esc(x.name)+'" data-url="'+esc(x.url)+'" data-index="'+(x.index??0)+'" onclick="deleteEntryFromButton(this)">Delete</button>';
-    return '<div class="item"><div class="grow"><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.type)+' • '+esc(x.url)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+star+action+'</div></div>';
+    return '<div class="item"><div class="grow"><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.type)+(x.isDir?' • Full Guide':'')+'</div></div><div style="display:flex;gap:6px;align-items:center">'+star+action+'</div></div>';
   };
   if(adminDirectoryOpen) html+=directory.map(renderItem).join('');
   html+=regular.map(renderItem).join('');
