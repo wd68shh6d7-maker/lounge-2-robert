@@ -74,25 +74,27 @@ async function playRadio(url,name){
  const direct=/\.(mp3|aac|ogg|opus|m3u|m3u8|pls)(\?|$)/i.test(url)||/streamtheworld|securenetsystems|radiomast|streamupsolutions|iheart\/aac|radio\.mp3/i.test(url);
  if(direct)return playDirectRadio(url,name);
  try{
-  const api='https://de1.api.radio-browser.info/json/stations/search?limit=10&hidebroken=true&name='+encodeURIComponent(name);
+  const api='https://de1.api.radio-browser.info/json/stations/search?limit=25&hidebroken=true&name='+encodeURIComponent(name);
   const r=await fetch(api,{cache:'no-store'});
   if(r.ok){
    const list=await r.json();
-   const hit=list.find(x=>x.url_resolved||x.url);
+   const exact=list.find(x=>(x.name||'').toLowerCase()===String(name).toLowerCase()&&(x.url_resolved||x.url));
+   const hit=exact||list.find(x=>x.url_resolved||x.url);
    if(hit)return playDirectRadio(hit.url_resolved||hit.url,name);
   }
  }catch(e){console.warn('Radio stream lookup failed',e)}
- // Keep webpage-based stations inside the Lounge player. Never launch them outside automatically.
+ viewer='';
  document.getElementById('player').classList.remove('app-player','pip');
- openPlayer(url,name);
+ document.getElementById('pc').innerHTML='<div style="padding:25px"><h2>'+esc(name)+'</h2><p class="muted">This station did not provide a playable stream for Lounge 2. I did not send you to the station website.</p></div>';
+ document.getElementById('player').classList.add('open');
 }
 function playDirectRadio(url,name){
  viewer=url;
- document.getElementById('pc').innerHTML='<div style="padding:25px"><h2>'+esc(name)+'</h2><audio controls autoplay playsinline src="'+esc(url)+'"></audio><p id="radioErr" class="muted">Starting station…</p><button class="primary" onclick="external()">Open Stream</button></div>';
+ document.getElementById('pc').innerHTML='<div style="padding:25px"><h2>'+esc(name)+'</h2><audio controls autoplay playsinline src="'+esc(url)+'"></audio><p id="radioErr" class="muted">Starting station inside Lounge 2…</p></div>';
  document.getElementById('player').classList.add('open');
  document.getElementById('player').classList.remove('pip','app-player');
  const a=document.querySelector('#pc audio');
- if(a)a.addEventListener('error',()=>{document.getElementById('radioErr').textContent='This stream rejected direct playback. Use Open Stream to continue.'});
+ if(a)a.addEventListener('error',()=>{document.getElementById('radioErr').textContent='This station rejected in-Lounge playback. The Lounge will not send you to its website.'});
 }
 
 function renderTabs(){document.getElementById('countries').innerHTML=countries.map(x=>'<button class="'+(country===x[1]?'active':'')+'" onclick="country=\''+x[1]+'\';state=\'All States\';renderTabs();loadRadio()">'+x[0]+'</button>').join('');document.getElementById('states').innerHTML=country==='US'?states.map(x=>'<button class="'+(state===x?'active':'')+'" onclick="state=\''+x+'\';loadRadio()">'+x+'</button>').join(''):'<span class="muted">Country-wide directory</span>'}
