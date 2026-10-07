@@ -51,7 +51,7 @@ function renderAdmin(){
   let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
   let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i}));
   let all=[...builtTV,...builtRadio,...customItems].filter(x=>adminCat==='All'||x.type===adminCat);
-  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\\''+x+'\\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
+  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\''+x+'\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
   document.getElementById('adminList').innerHTML=all.map(x=>{
     let action=x.deleted
       ? '<span class="muted">Deleted</span>'
