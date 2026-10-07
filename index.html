@@ -72,19 +72,18 @@ function external(){if(viewer)window.open(viewer,'_blank','noopener,noreferrer')
 async function playRadio(url,name){
  viewer=url;
  const direct=/\.(mp3|aac|ogg|opus|m3u|m3u8|pls)(\?|$)/i.test(url)||/streamtheworld|securenetsystems|radiomast|streamupsolutions|iheart\/aac|radio\.mp3/i.test(url);
- if(direct){return playDirectRadio(url,name)}
+ if(direct)return playDirectRadio(url,name);
  try{
   const api='https://de1.api.radio-browser.info/json/stations/search?limit=10&hidebroken=true&name='+encodeURIComponent(name);
   const r=await fetch(api,{cache:'no-store'});
   if(r.ok){
    const list=await r.json();
    const hit=list.find(x=>x.url_resolved||x.url);
-   if(hit){
-    const u=hit.url_resolved||hit.url;
-    return playDirectRadio(u,name);
-   }
+   if(hit)return playDirectRadio(hit.url_resolved||hit.url,name);
   }
  }catch(e){console.warn('Radio stream lookup failed',e)}
+ // Keep webpage-based stations inside the Lounge player. Never launch them outside automatically.
+ document.getElementById('player').classList.remove('app-player','pip');
  openPlayer(url,name);
 }
 function playDirectRadio(url,name){
@@ -97,7 +96,7 @@ function playDirectRadio(url,name){
 }
 
 function renderTabs(){document.getElementById('countries').innerHTML=countries.map(x=>'<button class="'+(country===x[1]?'active':'')+'" onclick="country=\''+x[1]+'\';state=\'All States\';renderTabs();loadRadio()">'+x[0]+'</button>').join('');document.getElementById('states').innerHTML=country==='US'?states.map(x=>'<button class="'+(state===x?'active':'')+'" onclick="state=\''+x+'\';loadRadio()">'+x+'</button>').join(''):'<span class="muted">Country-wide directory</span>'}
-async function loadRadio(){document.getElementById('rstatus').textContent='Loading current stations…';let q='https://de1.api.radio-browser.info/json/stations/search?limit=500&order=clickcount&reverse=true&hidebroken=true&countrycode='+country;if(country==='US'&&state!=='All States')q+='&state='+encodeURIComponent(state);for(const h of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info'])try{let r=await fetch(h+q.split('.info')[1]);if(r.ok){stations=await r.json();document.getElementById('rstatus').textContent=stations.length+' current stations found.';renderRadio();return}}catch(e){}stations=[];document.getElementById('rstatus').textContent='Live directory unavailable right now. Requested stations are still shown.';renderRadio()}
+async function loadRadio(){document.getElementById('rstatus').textContent='Loading current stations…';stations=[];renderRadio();let q='https://de1.api.radio-browser.info/json/stations/search?limit=500&order=clickcount&reverse=true&hidebroken=true&countrycode='+country;if(country==='US'&&state!=='All States')q+='&state='+encodeURIComponent(state);for(const h of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info'])try{let r=await fetch(h+q.split('.info')[1],{cache:'no-store'});if(r.ok){stations=await r.json();document.getElementById('rstatus').textContent=stations.length+' current stations found.';renderRadio();return}}catch(e){}document.getElementById('rstatus').textContent='Live directory unavailable right now. Your saved/requested stations are still shown.';renderRadio()}
 function renderRadio(){let q=(document.getElementById('rq')?.value||'').toLowerCase(),arr=[...named.filter(x=>!deleted.includes(key(x[0],x[1]))).map(x=>({name:x[0],url:x[1]})),...custom.filter(x=>x.type==='radio'),...stations].filter(x=>(x.name||'').toLowerCase().includes(q));document.getElementById('radioList').innerHTML=arr.map(x=>{let u=x.url_resolved||x.url||x[1];let n=x.name||x[0];return '<div class="item"><button class="star '+(favs.includes(key(n,u))?'on':'')+'" onclick="fav(\''+String(n).replace(/'/g,"\\'")+'\',\''+String(u).replace(/'/g,"\\'")+'\')">★</button><div class="grow"><b>'+esc(n)+'</b><div class="muted">'+esc(x.state||x.tags||'')+'</div></div><button class="primary" onclick="playRadio(\''+String(u).replace(/'/g,"\\'")+'\',\''+String(n).replace(/'/g,"\\'")+'\')">Play</button></div>'}).join('')||'<div class="card">No stations found.</div>'}
 async function loadFullDirectory(){
  if(fullDirectoryLoaded||fullDirectoryLoading)return;
