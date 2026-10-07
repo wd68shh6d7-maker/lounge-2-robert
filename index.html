@@ -69,7 +69,7 @@ function openPlayer(url,title,appMode=false){document.getElementById('player').c
 function openAppPlayer(url,title){openPlayer(url,title,true)}
 function closePlayer(){document.getElementById('player').classList.remove('open','pip','app-player');document.getElementById('pc').innerHTML='';viewer=''}
 function external(){if(viewer)window.open(viewer,'_blank','noopener,noreferrer')}function pip(){document.getElementById('player').classList.toggle('pip')}
-async async function playRadio(url,name){
+async function playRadio(url,name){
  viewer=url;
  const direct=/\.(mp3|aac|ogg|opus|m3u|m3u8|pls)(\?|$)/i.test(url)||/streamtheworld|securenetsystems|radiomast|streamupsolutions|iheart\/aac|radio\.mp3/i.test(url);
  if(direct){return playDirectRadio(url,name)}
