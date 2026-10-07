@@ -207,7 +207,15 @@ function renderTV(){
  if(!fullDirectoryLoaded&&!fullDirectoryLoading)loadFullDirectory();
 }
 function renderApps(){document.getElementById('appsList').innerHTML=apps.map(x=>'<div class="card"><h3>'+esc(x[0])+'</h3><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="primary" onclick="window.open(\''+x[1]+'\',\'_blank\',\'noopener,noreferrer\')">Open</button><button onclick="openAppPlayer(\''+x[1]+'\',\''+x[0]+'\')">Try in Lounge</button></div><p class="muted" style="margin-bottom:0">Open launches the service directly so its own sign-in and cookies work normally. Try in Lounge is available when the service permits embedded viewing.</p></div>').join('')}
-function renderMusic(){document.getElementById('musicList').innerHTML=music.length?music.map((m,i)=>'<div class="item"><div class="grow"><b>'+esc(m.name)+'</b></div><button class="primary" onclick="playRadio(\''+m.data+'\',\''+m.name.replace(/'/g,"\\'")+'\')">Play</button><button class="danger" onclick="music.splice('+i+',1);save();renderMusic()">Delete</button></div>').join(''):'<div class="card muted">No local music yet. Add tracks in Admin.</div>'}
+function playLocalMusic(data,name){
+ document.getElementById('pc').innerHTML='<div style="padding:25px"><h2>'+esc(name)+'</h2><audio controls autoplay playsinline></audio><p id="localMusicErr" class="muted">Playing from this device inside Lounge 2…</p></div>';
+ document.getElementById('player').classList.add('open');
+ document.getElementById('player').classList.remove('pip','app-player');
+ const a=document.querySelector('#pc audio'); a.src=data; a.load();
+ const p=a.play();if(p&&p.catch)p.catch(()=>{document.getElementById('localMusicErr').textContent='Tap Play to start this local track.'});
+ a.addEventListener('error',()=>{document.getElementById('localMusicErr').textContent='This local file could not be played by the device browser.'});
+}
+function renderMusic(){document.getElementById('musicList').innerHTML=music.length?music.map((m,i)=>'<div class="item"><div class="grow"><b>'+esc(m.name)+'</b></div><button class="primary" onclick="playLocalMusic(\''+m.data+'\',\''+m.name.replace(/'/g,"\\'")+'\')">Play</button><button class="danger" onclick="music.splice('+i+',1);save();renderMusic()">Delete</button></div>').join(''):'<div class="card muted">No local music yet. Add tracks in Admin.</div>'}
 function addMusic(e){[...e.target.files].forEach(f=>{let r=new FileReader();r.onload=()=>{music.push({name:f.name,data:r.result});save();renderMusic()};r.readAsDataURL(f)});e.target.value=''}
 function renderFav(){let a=favs.map(k=>{let p=k.split('|'),n=p.shift(),u=p.join('|');return '<div class="item"><button class="star on" onclick="fav(\''+n.replace(/'/g,"\\'")+'\',\''+u.replace(/'/g,"\\'")+'\')">★</button><div class="grow"><b>'+esc(n)+'</b></div><button class="primary" onclick="openPlayer(\''+u+'\',\''+n.replace(/'/g,"\\'")+'\')">Open</button></div>'}).join('');document.getElementById('favList').innerHTML=a||'<div class="card muted">No favorites yet.</div>'}
 function browserBlocked(u){return /(porn|pornography|xxx|xvideos|xnxx|redtube|pornhub|brazzers|onlyfans|sexcam|sexvideo|adult-video)/i.test(u)}
