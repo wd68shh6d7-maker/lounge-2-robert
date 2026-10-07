@@ -89,23 +89,27 @@ function positionPipDefault(){const p=document.getElementById('player');const b=
  r.addEventListener('keydown',e=>{if(!p.classList.contains('pip'))return;const q=b.getBoundingClientRect(),step=24;if(e.key==='ArrowRight'){b.style.left=clamp(q.left+step,0,window.innerWidth-q.width)+'px';b.style.top=clamp(q.top,0,window.innerHeight-q.height)+'px';b.style.right='auto';b.style.bottom='auto';}if(e.key==='ArrowLeft'){b.style.left=clamp(q.left-step,0,window.innerWidth-q.width)+'px';b.style.top=clamp(q.top,0,window.innerHeight-q.height)+'px';b.style.right='auto';b.style.bottom='auto';}if(e.key==='ArrowDown'){b.style.left=clamp(q.left,0,window.innerWidth-q.width)+'px';b.style.top=clamp(q.top+step,0,window.innerHeight-q.height)+'px';b.style.right='auto';b.style.bottom='auto';}if(e.key==='ArrowUp'){b.style.left=clamp(q.left,0,window.innerWidth-q.width)+'px';b.style.top=clamp(q.top-step,0,window.innerHeight-q.height)+'px';b.style.right='auto';b.style.bottom='auto';}});
  window.addEventListener('resize',()=>{if(!p.classList.contains('pip'))return;const q=b.getBoundingClientRect();b.style.left=clamp(q.left,0,Math.max(0,window.innerWidth-q.width))+'px';b.style.top=clamp(q.top,0,Math.max(0,window.innerHeight-q.height))+'px';b.style.right='auto';b.style.bottom='auto';});
 })();
+function looksLikeRadioStream(url){
+ return /\.(mp3|aac|ogg|opus|m3u|m3u8|pls)(\?|$)/i.test(url)||/streamtheworld|securenetsystems|radiomast|streamupsolutions|iheart\/aac|radio\.mp3|streamguys|playerservices/i.test(url);
+}
 async function playRadio(url,name){
  viewer=url;
- const direct=/\.(mp3|aac|ogg|opus|m3u|m3u8|pls)(\?|$)/i.test(url)||/streamtheworld|securenetsystems|radiomast|streamupsolutions|iheart\/aac|radio\.mp3/i.test(url);
- if(direct){return playDirectRadio(url,name)}
+ if(looksLikeRadioStream(url)){return playDirectRadio(url,name)}
  try{
-  const api='https://de1.api.radio-browser.info/json/stations/search?limit=10&hidebroken=true&name='+encodeURIComponent(name);
+  const api='https://de1.api.radio-browser.info/json/stations/search?limit=25&hidebroken=true&name='+encodeURIComponent(name);
   const r=await fetch(api,{cache:'no-store'});
   if(r.ok){
    const list=await r.json();
-   const hit=list.find(x=>x.url_resolved||x.url);
+   const hit=list.find(x=>looksLikeRadioStream(x.url_resolved||x.url));
    if(hit){
     const u=hit.url_resolved||hit.url;
     return playDirectRadio(u,name);
    }
   }
  }catch(e){console.warn('Radio stream lookup failed',e)}
- openPlayer(url,name);
+ document.getElementById('pc').innerHTML='<div style="padding:25px"><h2>'+esc(name)+'</h2><p class="muted">This station does not currently provide a playable audio stream to Lounge 2.</p><p class="muted">The Lounge will not send you out to the station website.</p></div>';
+ document.getElementById('player').classList.add('open');
+ document.getElementById('player').classList.remove('pip','app-player');
 }
 function playDirectRadio(url,name){
  viewer=url;
