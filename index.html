@@ -137,21 +137,35 @@ function renderFav(){let a=favs.map(k=>{let p=k.split('|'),n=p.shift(),u=p.join(
 function browserBlocked(u){return /(porn|pornography|xxx|xvideos|xnxx|redtube|pornhub|brazzers|onlyfans|sexcam|sexvideo|adult-video)/i.test(u)}function browserNavigate(u){u=(u||'').trim();if(!u)return;if(!/^https?:\/\//i.test(u))u='https://www.google.com/search?igu=1&q='+encodeURIComponent(u);if(browserBlocked(u)){document.getElementById('browserMsg').textContent='Blocked: pornographic/X-rated site or search.';return}document.getElementById('browserMsg').textContent='';document.getElementById('browserUrl').value=u;document.getElementById('browserFrame').src=u;document.getElementById('browserMsg').textContent='Privacy mode: DuckDuckGo search • browser-level ad/tracker blocking is not possible inside a cross-origin iframe.'}function browserGo(){browserNavigate(document.getElementById('browserUrl').value)}
 function browserOpenExternal(){let u=document.getElementById('browserUrl').value.trim();if(!/^https?:\/\//i.test(u))u='https://www.google.com/search?q='+encodeURIComponent(u);if(!browserBlocked(u))window.open(u,'_blank','noopener,noreferrer')}function browserBack(){try{document.getElementById('browserFrame').contentWindow.history.back()}catch(e){window.open(document.getElementById('browserUrl').value,'_blank','noopener,noreferrer')}}function browserForward(){try{document.getElementById('browserFrame').contentWindow.history.forward()}catch(e){window.open(document.getElementById('browserUrl').value,'_blank','noopener,noreferrer')}}function browserRefresh(){try{document.getElementById('browserFrame').contentWindow.location.reload()}catch(e){browserNavigate(document.getElementById('browserUrl').value)}}function browserHome(){browserNavigate('https://www.google.com/webhp?igu=1')}/* CHANNEL DELETION: each listed TV/radio entry has its own Delete control. */
 function deleteEntry(type,name,url,index){let k=key(name,url);if(type==='custom')custom.splice(index,1);else if(!deleted.includes(k))deleted.push(k);save();renderAdmin();renderTV();renderRadio()}function restoreDeleted(){deleted=[];save();renderAdmin();renderTV();renderRadio()}function addCustom(){let n=document.getElementById('cn').value.trim(),u=document.getElementById('cu').value.trim(),t=document.getElementById('ct').value;if(!n||!/^https?:\/\//i.test(u))return alert('Enter a name and http/https URL.');custom.push({name:n,url:u,type:t});save();renderAdmin();renderTV();renderRadio();document.getElementById('cn').value='';document.getElementById('cu').value=''}
-let adminCat='All';
+let adminCat='All'; let adminDirectoryOpen=false;
 function renderAdmin(){
-  let builtTV=[...tv.filter(x=>x[0]!=='Famelack — Full Live TV Directory'),...fullDirectory.map(x=>[x[0],x[1],x[2]])].filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i).map(x=>({type:'tv',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
-  let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
-  let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i}));
+  let builtTV=[...tv.filter(x=>x[0]!=='Famelack — Full Live TV Directory'),...fullDirectory.map(x=>[x[0],x[1],x[2]])]
+    .filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i)
+    .map(x=>({type:'tv',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1])),isDir:fullDirectory.some(d=>d[0]===x[0]&&d[1]===x[1])}));
+  let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1])),isDir:false}));
+  let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i,deleted:false,isDir:false}));
   let all=[...builtTV,...builtRadio,...customItems].filter(x=>adminCat==='All'||x.type===adminCat);
-  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\''+x+'\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
-  document.getElementById('adminList').innerHTML=all.map(x=>{
-    let action=x.deleted
-      ? '<span class="muted">Deleted</span>'
-      : '<button class="danger" data-type="'+esc(x.type)+'" data-name="'+esc(x.name)+'" data-url="'+esc(x.url)+'" data-index="'+(x.index??0)+'" onclick="deleteEntryFromButton(this)">Delete</button>';
-    return '<div class="item"><div class="grow"><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.type)+' • '+esc(x.url)+'</div></div>'+action+'</div>';
-  }).join('')||'<div class="muted">No channels or stations in this section.</div>';
-}
-function deleteEntryFromButton(b){deleteEntry(b.dataset.type,b.dataset.name,b.dataset.url,Number(b.dataset.index))}
+  document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\\''+x+'\\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
+  let html='';
+  if(adminCat==='All'||adminCat==='tv'){
+    if(!fullDirectoryLoaded){
+      html+='<div class="item"><div class="grow"><b>📺 Famelack — Full Live TV Directory</b><div class="muted">Loading individual channels…</div></div></div>';
+    }else{
+      html+='<div class="item"><div class="grow"><b>📺 Famelack — Full Live TV Directory</b><div class="muted">This directory cannot be deleted. Open it to manage channels individually.</div></div><button class="primary" onclick="adminDirectoryOpen=!adminDirectoryOpen;renderAdmin()">'+(adminDirectoryOpen?'Close':'Open')+'</button></div>';
+    }
+  }
+  const isFullDirItem=x=>x.type==='tv'&&fullDirectory.some(d=>d[0]===x.name&&d[1]===x.url);
+  const regular=all.filter(x=>!isFullDirItem(x));
+  const directory=adminDirectoryOpen?all.filter(isFullDirItem):[];
+  const renderItem=x=>{
+    const star=(x.type==='tv'||x.type==='radio')?'<button class="star '+(favs.includes(key(x.name,x.url))?'on':'')+'" onclick="fav(\\''+x.name.replace(/'/g,"\\\\'")+'\\',\\''+x.url.replace(/'/g,"\\\\'")+'\\')">★</button>':'';
+    const action=x.deleted?'<span class="muted">Deleted</span>':'<button class="danger" data-type="'+esc(x.type)+'" data-name="'+esc(x.name)+'" data-url="'+esc(x.url)+'" data-index="'+(x.index??0)+'" onclick="deleteEntryFromButton(this)">Delete</button>';
+    return '<div class="item"><div class="grow"><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.type)+' • '+esc(x.url)+'</div></div><div style="display:flex;gap:6px;align-items:center">'+star+action+'</div></div>';
+  };
+  if(adminDirectoryOpen) html+=directory.map(renderItem).join('');
+  html+=regular.map(renderItem).join('');
+  document.getElementById('adminList').innerHTML=html||'<div class="muted">No channels or stations in this section.</div>';
+}function deleteEntryFromButton(b){deleteEntry(b.dataset.type,b.dataset.name,b.dataset.url,Number(b.dataset.index))}
 document.getElementById('browserFrame').src='https://www.google.com/webhp?igu=1';
 renderTabs();renderTV();renderApps();renderMusic();renderFav();renderAdmin();startPresence();
 </script></body></html>
