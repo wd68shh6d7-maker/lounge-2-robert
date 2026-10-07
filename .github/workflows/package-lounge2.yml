@@ -1,0 +1,17 @@
+name: Package Lounge 2
+on:
+  push:
+    paths:
+      - 'index.html'
+      - '.github/workflows/package-lounge2.yml'
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package exact current build
+        run: zip -j Lounge-2-EXACT-CURRENT-BUILD.zip index.html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lounge-2-EXACT-CURRENT-BUILD
+          path: Lounge-2-EXACT-CURRENT-BUILD.zip
