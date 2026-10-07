@@ -97,7 +97,6 @@ function looksLikeRadioStream(url){
 }
 async function radioCandidates(url,name){
  let out=[];
- if(looksLikeRadioStream(url)&&!/\.(m3u|pls)(\?|$)/i.test(url))out.push(url);
  for(const host of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info']){
   try{
    const r=await fetch(host+'/json/stations/search?limit=100&hidebroken=true&name='+encodeURIComponent(name),{cache:'no-store'});
@@ -113,6 +112,12 @@ async function radioCandidates(url,name){
   }catch(e){}
   if(out.length>=10)break;
  }
+ // Use the station URL only after directory discovery, so station webpages
+ // such as /listen and /live are not attempted as audio first.
+ if(/^https?:\/\//i.test(url)&&(
+   /\.(mp3|aac|ogg|opus|m3u8)(\?|$)/i.test(url)||
+   /(?:stream|icecast|radiomast|streamtheworld|securenetsystems|streamupsolutions|iheart|streamguys|playerservices|asurahosting|radioart)/i.test(url)
+ ))if(!out.includes(url))out.push(url);
  return out.slice(0,10);
 }
 async function playRadio(url,name){
