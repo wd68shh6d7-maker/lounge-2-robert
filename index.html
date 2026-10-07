@@ -55,7 +55,9 @@ async function detectApproxArea(){
 async function presenceHeartbeat(){
  const c=document.getElementById('watchingCount'),p=document.getElementById('watchingPlaces');
  if(c)c.textContent='👥 1 in Lounge';
- if(p)p.textContent='📍 Your area';
+ if(p)p.textContent='📍 Finding state/country…';
+ const place=await detectApproxArea();
+ if(p)p.textContent='📍 '+prettyPlace(place);
 }
 function startPresence(){
  updateClock(); setInterval(updateClock,1000);
