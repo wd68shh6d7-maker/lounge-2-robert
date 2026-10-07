@@ -52,11 +52,11 @@ async function loadFullDirectory(){
  try{
   const r=await fetch('https://iptv-org.github.io/iptv/streams/us.m3u',{cache:'no-store'});
   const txt=await r.text();
-  const lines=txt.split(/\\r?\\n/), out=[];
+  const lines=txt.split(/\r?\n/), out=[];
   for(let i=0;i<lines.length;i++){
    if(lines[i].startsWith('#EXTINF:')){
     const name=lines[i].split(',').slice(1).join(',').trim(), url=(lines[i+1]||'').trim();
-    if(name&&/^https?:\\/\\//i.test(url)) out.push([name,url,'Full Directory']);
+    if(name&&/^https?:\/\//i.test(url)) out.push([name,url,'Full Directory']);
    }
   }
   fullDirectory=out.filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i);
@@ -65,7 +65,7 @@ async function loadFullDirectory(){
  fullDirectoryLoading=false; renderTV(); renderAdmin();
 }
 function playTV(url,name){
- const stream=/\\.(m3u8|mp4|webm)(\\?.*)?$/i.test(url);
+ const stream=/\.(m3u8|mp4|webm)(\?.*)?$/i.test(url);
  if(!stream){openPlayer(url,name);return}
  viewer=url;
  document.getElementById('pc').innerHTML='<div style="padding:12px"><h2>'+esc(name)+'</h2><video controls autoplay playsinline style="width:100%;max-height:78vh;background:#000" src="'+esc(url)+'"></video><p class="muted">If this stream does not play in the embedded player, use Open in browser.</p></div>';
