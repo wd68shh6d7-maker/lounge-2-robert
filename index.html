@@ -4,7 +4,7 @@
 *{box-sizing:border-box}body{margin:0;background:#071019;color:#eef6fb;font-family:system-ui,sans-serif}.top{position:sticky;top:0;z-index:5;background:#08131c;border-bottom:1px solid #29404f;padding:10px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}.brand{font-weight:800;font-size:20px;margin-right:8px}.nav,button{border:1px solid #29404f;background:#10202c;color:#eef6fb;border-radius:9px;padding:9px 12px;cursor:pointer}.nav:hover,button:hover,.active{background:#174b6b}.wrap{max-width:1500px;margin:auto;padding:16px}.view{display:none}.view.active{display:block}.hero,.card{background:#0d1822;border:1px solid #29404f;border-radius:16px;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.tabs{display:flex;gap:6px;overflow:auto;padding:8px 0}.tabs button{white-space:nowrap}.search,.field{width:100%;padding:11px;border-radius:9px;border:1px solid #29404f;background:#08131c;color:#fff}.browser{margin-top:18px;border:1px solid #29404f;border-radius:14px;overflow:hidden;background:#050b10}.browserbar{display:flex;gap:6px;padding:8px;background:#0b1720;flex-wrap:wrap}.browserbar input{flex:1;min-width:220px}.browserframe{width:100%;height:620px;border:0;background:#fff}.list{display:flex;flex-direction:column;gap:8px}.item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid #29404f;border-radius:10px;background:#0b1620}.grow{flex:1}.muted{color:#9fb1bf}.star{background:transparent;border:0;font-size:22px;color:#71828e}.star.on{color:#ffd45c}.primary{background:#175d8c}.danger{background:#4b171c}.player{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:20;display:none;padding:25px}.player.open{display:flex;align-items:center;justify-content:center}.box{position:relative;width:min(1200px,96vw);height:min(820px,92vh);background:#05090d;border:1px solid #456072;border-radius:15px;overflow:hidden}.close{position:absolute;left:9px;top:105px;z-index:3;width:40px;height:40px;border-radius:50%;font-size:25px;background:#05090d}.box iframe{width:100%;height:100%;border:0}.bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.82);padding:8px;display:flex;justify-content:space-between;align-items:center}.pip{position:fixed!important;right:18px;bottom:18px;left:auto;top:auto;width:min(420px,92vw);height:min(250px,45vh);padding:0;background:transparent}.pip .box{width:100%;height:100%}.pip .bar{display:none}audio{width:100%}@media(max-width:700px){.top{position:static}.wrap{padding:10px}.player{padding:7px}.box{height:88vh}}
 .presence{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.presence-pill{border:1px solid #29404f;background:#0d1822;border-radius:999px;padding:7px 10px;font-size:14px}.presence-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#49d17d;margin-right:5px}</style></head>
 <body>
-<header class="top"><div class="brand">🏠 Lounge 2</div><button onclick="show('home')">Home</button><button onclick="show('info')">Information</button><button onclick="show('tv')">Live TV</button><button onclick="show('radio')">Radio</button><button onclick="show('music')">Robert & Christina’s Music</button><button onclick="show('apps')">Apps</button><button onclick="show('favorites')">Favorites</button><button onclick="show('admin')">Admin</button><div class="presence"><span id="watchingCount" class="presence-pill">👥 0 watching</span><span id="watchingPlaces" class="presence-pill">📍 Checking area…</span><span id="localClock" class="presence-pill">🕒 --:--</span></div></header>
+<header class="top"><div class="brand">🏠 Lounge 2</div><button onclick="show('home')">Home</button><button onclick="show('info')">Information</button><button onclick="show('tv')">Live TV</button><button onclick="show('radio')">Radio</button><button onclick="show('music')">Robert & Christina’s Music</button><button onclick="show('apps')">Apps</button><button onclick="show('favorites')">Favorites</button><button onclick="show('admin')">Admin</button><div class="presence"><span id="watchingCount" class="presence-pill">👥 1 in Lounge</span><span id="watchingPlaces" class="presence-pill">📍 Finding state/country…</span><span id="localClock" class="presence-pill">🕒 --:--</span></div></header>
 <main class="wrap">
 <section id="home" class="view active"><div class="hero"><h1>Welcome to Lounge 2</h1><p class="muted">Standalone second lounge build. Lounge One is completely separate.</p><div class="grid">
 <div class="card"><h2>📺 Live TV</h2><p class="muted">Famelack directory and public sources.</p><button class="primary" onclick="show('tv')">Open Live TV</button></div>
@@ -41,7 +41,7 @@ let country='US',state='All States',stations=[],favs=JSON.parse(localStorage.l2f
 function updateClock(){
  const el=document.getElementById('localClock'); if(!el)return;
  const now=new Date();
- el.textContent='🕒 '+new Intl.DateTimeFormat([], {hour:'numeric',minute:'2-digit',second:'2-digit'}).format(now);
+ el.textContent='🕒 '+new Intl.DateTimeFormat([], {hour:'numeric',minute:'2-digit'}).format(now);
 }
 function prettyPlace(x){
  if(!x)return 'Unknown area';
@@ -67,10 +67,10 @@ async function presenceHeartbeat(){
   const r=await fetch(SUPABASE_URL+'/rest/v1/viewer_presence?select=country_code,region_code,last_seen&last_seen=gt.'+encodeURIComponent(cutoff),{headers:presenceHeaders,cache:'no-store'});
   if(r.ok){
    const rows=await r.json();
-   document.getElementById('watchingCount').textContent='👥 '+rows.length+' watching';
+   document.getElementById('watchingCount').textContent='👥 '+rows.length+' '+(rows.length===1?'person':'people')+' in Lounge';
    const counts={}; rows.forEach(x=>{const p=prettyPlace(x);counts[p]=(counts[p]||0)+1});
    const places=Object.entries(counts).map(([p,n])=>n>1?p+' ('+n+')':p);
-   document.getElementById('watchingPlaces').textContent='📍 '+(places.length?places.join(' • '):'No area data');
+   document.getElementById('watchingPlaces').textContent='📍 '+(places.length?places.join(' • '):'State/country unavailable');
   }
  }catch(e){
   const c=document.getElementById('watchingCount'); if(c)c.textContent='👥 1 watching';
