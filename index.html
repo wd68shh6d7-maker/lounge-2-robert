@@ -46,7 +46,7 @@ function updateClock(){
 function prettyPlace(x){
  if(!x)return 'Unknown area';
  const stateMap={AR:'Arkansas',TN:'Tennessee',MS:'Mississippi',MO:'Missouri',KS:'Kansas',OK:'Oklahoma',TX:'Texas',CO:'Colorado',CA:'California',FL:'Florida',GA:'Georgia',AL:'Alabama',KY:'Kentucky'};
- return (stateMap[x.region_code]||x.region||'Unknown area')+(x.country_code?', '+x.country_code:'');
+ const countryMap={US:'United States',CA:'Canada',GB:'United Kingdom',AU:'Australia',IE:'Ireland',IN:'India',PK:'Pakistan',PH:'Philippines',MX:'Mexico',DE:'Germany',FR:'France',ES:'Spain',BR:'Brazil'}; const country=countryMap[x.country_code]||x.country_code||'Unknown country'; const region=stateMap[x.region_code]||x.region||'Unknown area'; return region+', '+country;
 }
 async function detectApproxArea(){
  try{
