@@ -97,28 +97,31 @@ function looksLikeRadioStream(url){
 }
 async function radioCandidates(url,name){
  let out=[];
- for(const host of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info']){
-  try{
-   const r=await fetch(host+'/json/stations/search?limit=100&hidebroken=true&name='+encodeURIComponent(name),{cache:'no-store'});
-   if(r.ok){
-    const list=await r.json();
-    for(const x of list){
-     const u=x.url_resolved||x.url;
-     const codec=String(x.codec||'').toLowerCase();
-     const isAudio=/mp3|aac|ogg|opus|mpeg|audio|m3u8/.test(codec)||looksLikeRadioStream(u);
-     if(isAudio&&/^https?:\/\//i.test(u)&&!/\.(m3u|pls)(\?|$)/i.test(u)&&!out.includes(u))out.push(u);
+ const names=[name,String(name).split(' — ')[0],String(name).replace(/\s*\d+(?:\.\d+)?\s*(?:FM|AM)\b/i,'').trim()];
+ for(const searchName of [...new Set(names.filter(Boolean))]){
+  for(const host of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info']){
+   try{
+    const r=await fetch(host+'/json/stations/search?limit=100&hidebroken=true&name='+encodeURIComponent(searchName),{cache:'no-store'});
+    if(r.ok){
+     const list=await r.json();
+     for(const x of list){
+      const u=x.url_resolved||x.url;
+      const codec=String(x.codec||'').toLowerCase();
+      const isAudio=/mp3|aac|ogg|opus|mpeg|audio|m3u8/.test(codec)||looksLikeRadioStream(u);
+      if(isAudio&&/^https?:\/\//i.test(u)&&!\.(m3u|pls)(\?|$)/i.test(u)&&!out.includes(u))out.push(u);
+     }
     }
-   }
-  }catch(e){}
+   }catch(e){}
+   if(out.length>=10)break;
+  }
   if(out.length>=10)break;
  }
- // Use the station URL only after directory discovery, so station webpages
- // such as /listen and /live are not attempted as audio first.
+ if(/^adagio\s*fm$/i.test(String(name).trim())&&!out.includes('http://hi5.adagio.fm'))out.push('http://hi5.adagio.fm');
  if(/^https?:\/\//i.test(url)&&(
    /\.(mp3|aac|ogg|opus|m3u8)(\?|$)/i.test(url)||
    /(?:stream|icecast|radiomast|streamtheworld|securenetsystems|streamupsolutions|iheart|streamguys|playerservices|asurahosting|radioart)/i.test(url)
  ))if(!out.includes(url))out.push(url);
- return out.slice(0,10);
+ return [...new Set(out)].slice(0,10);
 }
 async function playRadio(url,name){
  viewer=url;
