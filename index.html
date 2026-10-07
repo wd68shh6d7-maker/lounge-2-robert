@@ -135,7 +135,7 @@ function browserNavigate(u){
  frame.src=u;
  browserLoadTimer=setTimeout(()=>{
    msg.textContent='The site did not allow embedded viewing. The search/address is still valid — use the buttons below.';
-   if(!/^https?:\\/\\//i.test(original) && !/^(?:[a-z0-9-]+\\.)+[a-z]{2,}/i.test(original)){
+   if(!/^https?:\/\//i.test(original) && !/^(?:[a-z0-9-]+\.)+[a-z]{2,}/i.test(original)){
      const q=encodeURIComponent(original);
      frame.srcdoc='<div style="font-family:system-ui;padding:28px;background:#fff;color:#111"><h2>Search: '+esc(original)+'</h2><p>That search page blocked embedded viewing.</p><p><a target="_blank" rel="noopener" href="https://www.google.com/search?q='+q+'">Open Google results for '+esc(original)+'</a></p><p><a target="_blank" rel="noopener" href="https://www.walmart.com/">Open Walmart</a></p></div>';
    }
