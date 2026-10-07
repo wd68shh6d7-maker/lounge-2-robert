@@ -31,10 +31,11 @@ const named=[['The Bridge 91.9','https://www.bridgeradio.org/listen'],['K-Wave 1
 ['GraceFM Colorado KXGR','https://calvaryco.church/gracefm'],
 ['Heartland Public Radio HPR4 — Bluegrass Gospel','https://hpr.org/listen/'],
 ['The Kansas Breeze','https://streams.radiomast.io/a2dd31a2-a524-48ce-baea-8271e1a37ab2']];
+let fullDirectory=[],fullDirectoryLoaded=false,fullDirectoryLoading=false;
 let country='US',state='All States',stations=[],favs=JSON.parse(localStorage.l2f||'[]'),custom=JSON.parse(localStorage.l2c||'[]'),music=JSON.parse(localStorage.l2m||'[]'),deleted=JSON.parse(localStorage.l2d||'[]'),cat='All',viewer='';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){localStorage.l2f=JSON.stringify(favs);localStorage.l2c=JSON.stringify(custom);localStorage.l2m=JSON.stringify(music);localStorage.l2d=JSON.stringify(deleted)}
-function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='tv')renderTV();if(id==='radio'){renderTabs();loadRadio()}if(id==='music')renderMusic();if(id==='apps')renderApps();if(id==='favorites')renderFav();if(id==='admin')renderAdmin();scrollTo(0,0)}
+function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='tv'){loadFullDirectory();renderTV();}if(id==='radio'){renderTabs();loadRadio()}if(id==='music')renderMusic();if(id==='apps')renderApps();if(id==='favorites')renderFav();if(id==='admin'){renderAdmin();loadFullDirectory();}scrollTo(0,0)}
 function key(n,u){return n+'|'+u}function fav(n,u){let k=key(n,u);favs=favs.includes(k)?favs.filter(x=>x!==k):[...favs,k];save();renderTV();renderRadio();renderFav()}
 function openPlayer(url,title){viewer=url;document.getElementById('pc').innerHTML='<iframe src="'+esc(url)+'" title="'+esc(title)+'" allow="autoplay;fullscreen;picture-in-picture"></iframe>';document.getElementById('player').classList.add('open');document.getElementById('player').classList.remove('pip')}
 function closePlayer(){document.getElementById('player').classList.remove('open','pip');document.getElementById('pc').innerHTML='';viewer=''}
@@ -43,7 +44,44 @@ function playRadio(url,name){viewer=url;const isWeb=/\.(html?|php)(\/|$)/i.test(
 function renderTabs(){document.getElementById('countries').innerHTML=countries.map(x=>'<button class="'+(country===x[1]?'active':'')+'" onclick="country=\''+x[1]+'\';state=\'All States\';renderTabs();loadRadio()">'+x[0]+'</button>').join('');document.getElementById('states').innerHTML=country==='US'?states.map(x=>'<button class="'+(state===x?'active':'')+'" onclick="state=\''+x+'\';loadRadio()">'+x+'</button>').join(''):'<span class="muted">Country-wide directory</span>'}
 async function loadRadio(){document.getElementById('rstatus').textContent='Loading current stations…';let q='https://de1.api.radio-browser.info/json/stations/search?limit=500&order=clickcount&reverse=true&hidebroken=true&countrycode='+country;if(country==='US'&&state!=='All States')q+='&state='+encodeURIComponent(state);for(const h of ['https://de1.api.radio-browser.info','https://at1.api.radio-browser.info','https://nl1.api.radio-browser.info'])try{let r=await fetch(h+q.split('.info')[1]);if(r.ok){stations=await r.json();document.getElementById('rstatus').textContent=stations.length+' current stations found.';renderRadio();return}}catch(e){}stations=[];document.getElementById('rstatus').textContent='Live directory unavailable right now. Requested stations are still shown.';renderRadio()}
 function renderRadio(){let q=(document.getElementById('rq')?.value||'').toLowerCase(),arr=[...named.filter(x=>!deleted.includes(key(x[0],x[1]))).map(x=>({name:x[0],url:x[1]})),...custom.filter(x=>x.type==='radio'),...stations].filter(x=>(x.name||'').toLowerCase().includes(q));document.getElementById('radioList').innerHTML=arr.map(x=>{let u=x.url_resolved||x.url||x[1];let n=x.name||x[0];return '<div class="item"><button class="star '+(favs.includes(key(n,u))?'on':'')+'" onclick="fav(\''+String(n).replace(/'/g,"\\'")+'\',\''+String(u).replace(/'/g,"\\'")+'\')">★</button><div class="grow"><b>'+esc(n)+'</b><div class="muted">'+esc(x.state||x.tags||'')+'</div></div><button class="primary" onclick="playRadio(\''+String(u).replace(/'/g,"\\'")+'\',\''+String(n).replace(/'/g,"\\'")+'\')">Play</button></div>'}).join('')||'<div class="card">No stations found.</div>'}
-function renderTV(){let cats=['All','Guide','News','Entertainment','Drama/Soaps','Sports','Music','Kids','Culture'];document.getElementById('tvCats').innerHTML=cats.map(x=>'<button class="'+(cat===x?'active':'')+'" onclick="cat=\''+x+'\';renderTV()">'+x+'</button>').join('');let q=(document.getElementById('tvq')?.value||'').toLowerCase(),arr=[...tv.filter(x=>!deleted.includes(key(x[0],x[1]))),...custom.filter(x=>x.type==='tv').map(x=>[x.name,x.url,x.category||'Culture'])].filter(x=>(cat==='All'||x[2]===cat)&&x[0].toLowerCase().includes(q));document.getElementById('tvList').innerHTML=arr.map(x=>'<div class="card"><h3>'+esc(x[0])+'</h3><span class="muted">'+esc(x[2])+'</span><div style="margin-top:10px"><button class="star '+(favs.includes(key(x[0],x[1]))?'on':'')+'" onclick="fav(\''+x[0].replace(/'/g,"\\'")+'\',\''+x[1].replace(/'/g,"\\'")+'\')">★</button><button class="primary" onclick="openPlayer(\''+x[1]+'\',\''+x[0].replace(/'/g,"\\'")+'\')">Open</button></div></div>').join('')}
+async function loadFullDirectory(){
+ if(fullDirectoryLoaded||fullDirectoryLoading)return;
+ fullDirectoryLoading=true;
+ const box=document.getElementById('tvList');
+ if(box&&!document.getElementById('fullDirStatus')) box.insertAdjacentHTML('afterbegin','<div id="fullDirStatus" class="card"><b>Loading full TV directory…</b><div class="muted">Building the channel-by-channel list. You will be able to delete individual channels in Admin.</div></div>');
+ try{
+  const r=await fetch('https://iptv-org.github.io/iptv/streams/us.m3u',{cache:'no-store'});
+  const txt=await r.text();
+  const lines=txt.split(/\\r?\\n/), out=[];
+  for(let i=0;i<lines.length;i++){
+   if(lines[i].startsWith('#EXTINF:')){
+    const name=lines[i].split(',').slice(1).join(',').trim(), url=(lines[i+1]||'').trim();
+    if(name&&/^https?:\\/\\//i.test(url)) out.push([name,url,'Full Directory']);
+   }
+  }
+  fullDirectory=out.filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i);
+  fullDirectoryLoaded=true;
+ }catch(e){console.warn('Full directory load failed',e)}
+ fullDirectoryLoading=false; renderTV(); renderAdmin();
+}
+function playTV(url,name){
+ const stream=/\\.(m3u8|mp4|webm)(\\?.*)?$/i.test(url);
+ if(!stream){openPlayer(url,name);return}
+ viewer=url;
+ document.getElementById('pc').innerHTML='<div style="padding:12px"><h2>'+esc(name)+'</h2><video controls autoplay playsinline style="width:100%;max-height:78vh;background:#000" src="'+esc(url)+'"></video><p class="muted">If this stream does not play in the embedded player, use Open in browser.</p></div>';
+ document.getElementById('player').classList.add('open');
+}
+function renderTV(){
+ let cats=['All','Guide','News','Entertainment','Drama/Soaps','Sports','Music','Kids','Culture','Full Directory'];
+ document.getElementById('tvCats').innerHTML=cats.map(x=>'<button class="'+(cat===x?'active':'')+'" onclick="cat=\''+x+'\';renderTV()">'+x+'</button>').join('');
+ let q=(document.getElementById('tvq')?.value||'').toLowerCase();
+ let base=[...tv.filter(x=>!deleted.includes(key(x[0],x[1]))),...custom.filter(x=>x.type==='tv').map(x=>[x.name,x.url,x.category||'Culture'])];
+ if(fullDirectoryLoaded) base=base.filter(x=>x[0]!=='Famelack — Full Live TV Directory');
+ let arr=[...base,...fullDirectory.map(x=>[x[0],x[1],'Full Directory'])].filter(x=>(cat==='All'||x[2]===cat)&&x[0].toLowerCase().includes(q));
+ let intro=cat==='All'||cat==='Full Directory'?'<div class="card"><h3>📺 Full TV Directory — Individual Channels</h3><p class="muted">Every channel is shown separately. Deleting a channel in Admin removes only that channel, never the entire directory.</p></div>':'';
+ document.getElementById('tvList').innerHTML=intro+arr.map(x=>'<div class="card"><h3>'+esc(x[0])+'</h3><span class="muted">'+esc(x[2])+'</span><div style="margin-top:10px"><button class="star '+(favs.includes(key(x[0],x[1]))?'on':'')+'" onclick="fav(\''+x[0].replace(/'/g,"\\'")+'\',\''+x[1].replace(/'/g,"\\'")+'\')">★</button><button class="primary" onclick="playTV(\''+x[1]+'\',\''+x[0].replace(/'/g,"\\'")+'\')">Open</button></div></div>').join('')||'<div class="card muted">No channels found.</div>';
+ if(!fullDirectoryLoaded&&!fullDirectoryLoading) loadFullDirectory();
+}
 function renderApps(){document.getElementById('appsList').innerHTML=apps.map(x=>'<div class="card"><h3>'+esc(x[0])+'</h3><button class="primary" onclick="openPlayer(\''+x[1]+'\',\''+x[0]+'\')">Open in Lounge</button></div>').join('')}
 function renderMusic(){document.getElementById('musicList').innerHTML=music.length?music.map((m,i)=>'<div class="item"><div class="grow"><b>'+esc(m.name)+'</b></div><button class="primary" onclick="playRadio(\''+m.data+'\',\''+m.name.replace(/'/g,"\\'")+'\')">Play</button><button class="danger" onclick="music.splice('+i+',1);save();renderMusic()">Delete</button></div>').join(''):'<div class="card muted">No local music yet. Add tracks in Admin.</div>'}
 function addMusic(e){[...e.target.files].forEach(f=>{let r=new FileReader();r.onload=()=>{music.push({name:f.name,data:r.result});save();renderMusic()};r.readAsDataURL(f)});e.target.value=''}
@@ -53,7 +91,7 @@ function browserOpenExternal(){let u=document.getElementById('browserUrl').value
 function deleteEntry(type,name,url,index){let k=key(name,url);if(type==='custom')custom.splice(index,1);else if(!deleted.includes(k))deleted.push(k);save();renderAdmin();renderTV();renderRadio()}function restoreDeleted(){deleted=[];save();renderAdmin();renderTV();renderRadio()}function addCustom(){let n=document.getElementById('cn').value.trim(),u=document.getElementById('cu').value.trim(),t=document.getElementById('ct').value;if(!n||!/^https?:\/\//i.test(u))return alert('Enter a name and http/https URL.');custom.push({name:n,url:u,type:t});save();renderAdmin();renderTV();renderRadio();document.getElementById('cn').value='';document.getElementById('cu').value=''}
 let adminCat='All';
 function renderAdmin(){
-  let builtTV=tv.map(x=>({type:'tv',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
+  let builtTV=[...tv,...fullDirectory.map(x=>[x[0],x[1],x[2]])].filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i).map(x=>({type:'tv',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
   let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1]))}));
   let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i}));
   let all=[...builtTV,...builtRadio,...customItems].filter(x=>adminCat==='All'||x.type===adminCat);
