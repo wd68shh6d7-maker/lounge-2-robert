@@ -37,7 +37,8 @@ const named=[['Radio Art — Vocal New Age','https://www.radioart.com/'],['The B
 ['Heartland Public Radio HPR4 — Bluegrass Gospel','https://hpr.org/listen/'],
 ['The Kansas Breeze','https://streams.radiomast.io/a2dd31a2-a524-48ce-baea-8271e1a37ab2']];
 let fullDirectory=[],fullDirectoryLoaded=false,fullDirectoryLoading=false;
-function readStore(k,fallback=[]){try{const v=JSON.parse(localStorage.getItem(k)||'null');return Array.isArray(v)?v:fallback}catch(e){return fallback}}\nlet country='US',state='All States',stations=[],favs=readStore('l2f'),custom=readStore('l2c'),music=readStore('l2m'),deleted=readStore('l2d'),cat='All',viewer='';
+function readStore(k,fallback=[]){try{const v=JSON.parse(localStorage.getItem(k)||'null');return Array.isArray(v)?v:fallback}catch(e){return fallback}}
+let country='US',state='All States',stations=[],favs=readStore('l2f'),custom=readStore('l2c'),music=readStore('l2m'),deleted=readStore('l2d'),cat='All',viewer='';
 function updateClock(){
  const el=document.getElementById('localClock'); if(!el)return;
  const now=new Date();
@@ -100,7 +101,8 @@ async function loadFullDirectory(){
  try{
   const r=await fetch('https://iptv-org.github.io/iptv/streams/us.m3u',{cache:'no-store'});
   const txt=await r.text();
-  const lines=txt.split(/\r?\n/), out=[];
+  const lines=txt.split(/\r?
+/), out=[];
   for(let i=0;i<lines.length;i++){
    if(lines[i].startsWith('#EXTINF:')){
     const name=lines[i].split(',').slice(1).join(',').trim(), url=(lines[i+1]||'').trim();
