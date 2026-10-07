@@ -143,6 +143,8 @@ function browserResolve(u){
 }
 let browserLoadTimer=null;
 function browserNavigate(u){
+ u=(u||'').trim(); if(!u)return;
+ const original=u;
  u=browserResolve(u); if(!u)return;
  const msg=document.getElementById('browserMsg');
  if(browserBlocked(u)){msg.textContent='Blocked: pornographic/X-rated site or search.';return}
@@ -151,11 +153,17 @@ function browserNavigate(u){
  clearTimeout(browserLoadTimer);
  const frame=document.getElementById('browserFrame');
  frame.src=u;
- browserLoadTimer=setTimeout(()=>{msg.textContent='If the page does not appear, that website may block embedded viewing. Use “Open externally” to view it in a regular browser.'},5000);
+ browserLoadTimer=setTimeout(()=>{
+   msg.textContent='The site did not allow embedded viewing. The search/address is still valid — use the buttons below.';
+   if(!/^https?:\\/\\//i.test(original) && !/^(?:[a-z0-9-]+\\.)+[a-z]{2,}/i.test(original)){
+     const q=encodeURIComponent(original);
+     frame.srcdoc='<div style="font-family:system-ui;padding:28px;background:#fff;color:#111"><h2>Search: '+esc(original)+'</h2><p>That search page blocked embedded viewing.</p><p><a target="_blank" rel="noopener" href="https://www.google.com/search?q='+q+'">Open Google results for '+esc(original)+'</a></p><p><a target="_blank" rel="noopener" href="https://www.walmart.com/">Open Walmart</a></p></div>';
+   }
+ },5000);
 }
 function browserFrameLoaded(){
  clearTimeout(browserLoadTimer);
- document.getElementById('browserMsg').textContent='Page loaded. If the site appears blank, it may require opening externally.';
+ document.getElementById('browserMsg').textContent='Page loaded.';
 }
 function browserGo(){browserNavigate(document.getElementById('browserUrl').value)}
 function browserOpenExternal(){let u=browserResolve(document.getElementById('browserUrl').value);if(!u||browserBlocked(u))return;if(window.open(u,'_blank','noopener,noreferrer')===null)document.getElementById('browserMsg').textContent='Pop-up blocked. Use the browser controls on your device.'}
