@@ -2,9 +2,9 @@
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lounge 2</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#071019;color:#eef6fb;font-family:system-ui,sans-serif}.top{position:sticky;top:0;z-index:5;background:#08131c;border-bottom:1px solid #29404f;padding:10px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}.brand{font-weight:800;font-size:20px;margin-right:8px}.nav,button{border:1px solid #29404f;background:#10202c;color:#eef6fb;border-radius:9px;padding:9px 12px;cursor:pointer}.nav:hover,button:hover,.active{background:#174b6b}.wrap{max-width:1500px;margin:auto;padding:16px}.view{display:none}.view.active{display:block}.hero,.card{background:#0d1822;border:1px solid #29404f;border-radius:16px;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.tabs{display:flex;gap:6px;overflow:auto;padding:8px 0}.tabs button{white-space:nowrap}.search,.field{width:100%;padding:11px;border-radius:9px;border:1px solid #29404f;background:#08131c;color:#fff}.browser{margin-top:18px;border:1px solid #29404f;border-radius:14px;overflow:hidden;background:#050b10}.browserbar{display:flex;gap:6px;padding:8px;background:#0b1720;flex-wrap:wrap}.browserbar input{flex:1;min-width:220px}.browserframe{width:100%;height:620px;border:0;background:#fff}.list{display:flex;flex-direction:column;gap:8px}.item{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid #29404f;border-radius:10px;background:#0b1620}.grow{flex:1}.muted{color:#9fb1bf}.star{background:transparent;border:0;font-size:22px;color:#71828e}.star.on{color:#ffd45c}.primary{background:#175d8c}.danger{background:#4b171c}.player{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:20;display:none;padding:25px}.player.open{display:flex;align-items:center;justify-content:center}.box{position:relative;width:min(1200px,96vw);height:min(820px,92vh);background:#05090d;border:1px solid #456072;border-radius:15px;overflow:hidden}.close{position:absolute;left:9px;top:8px;z-index:3;width:40px;height:40px;border-radius:50%;font-size:25px;background:#05090d}.box iframe{width:100%;height:100%;border:0}.bar{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.82);padding:8px;display:flex;justify-content:space-between;align-items:center}.pip{position:fixed!important;right:18px;bottom:18px;left:auto;top:auto;width:min(420px,92vw);height:min(250px,45vh);padding:0;background:transparent}.pip .box{width:100%;height:100%}.pip .bar{display:none}audio{width:100%}@media(max-width:700px){.top{position:static}.wrap{padding:10px}.player{padding:7px}.box{height:88vh}}
-</style></head>
+.presence{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.presence-pill{border:1px solid #29404f;background:#0d1822;border-radius:999px;padding:7px 10px;font-size:14px}.presence-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#49d17d;margin-right:5px}</style></head>
 <body>
-<header class="top"><div class="brand">🏠 Lounge 2</div><button onclick="show('home')">Home</button><button onclick="show('info')">Information</button><button onclick="show('tv')">Live TV</button><button onclick="show('radio')">Radio</button><button onclick="show('music')">Robert & Christina’s Music</button><button onclick="show('apps')">Apps</button><button onclick="show('favorites')">Favorites</button><button onclick="show('admin')">Admin</button></header>
+<header class="top"><div class="brand">🏠 Lounge 2</div><button onclick="show('home')">Home</button><button onclick="show('info')">Information</button><button onclick="show('tv')">Live TV</button><button onclick="show('radio')">Radio</button><button onclick="show('music')">Robert & Christina’s Music</button><button onclick="show('apps')">Apps</button><button onclick="show('favorites')">Favorites</button><button onclick="show('admin')">Admin</button><div class="presence"><span id="watchingCount" class="presence-pill">👥 0 watching</span><span id="watchingPlaces" class="presence-pill">📍 Checking area…</span><span id="localClock" class="presence-pill">🕒 --:--</span></div></header>
 <main class="wrap">
 <section id="home" class="view active"><div class="hero"><h1>Welcome to Lounge 2</h1><p class="muted">Standalone second lounge build. Lounge One is completely separate.</p><div class="grid">
 <div class="card"><h2>📺 Live TV</h2><p class="muted">Famelack directory and public sources.</p><button class="primary" onclick="show('tv')">Open Live TV</button></div>
@@ -22,6 +22,11 @@
 </main>
 <div id="player" class="player"><div class="box"><button class="close" onclick="closePlayer()">×</button><div id="pc" style="width:100%;height:100%"></div><div class="bar"><span class="muted">Lounge 2 viewer</span><span><button onclick="pip()">▣ PiP</button><button onclick="external()">Open in browser</button></span></div></div></div>
 <script>
+const SUPABASE_URL='https://doxzuuzzcxaozkyojybu.supabase.co';
+const SUPABASE_KEY='sb_publishable_U2DbudIt9o0D8UO1R0hWuw_yTsJBPFq';
+let presenceSession=localStorage.l2presence||('l2_'+crypto.randomUUID()); localStorage.l2presence=presenceSession;
+let presenceTimer=null;
+const presenceHeaders={'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
 const countries=[['United States','US'],['Canada','CA'],['United Kingdom','GB'],['Australia','AU'],['Ireland','IE'],['India','IN'],['Pakistan','PK'],['Philippines','PH'],['Mexico','MX'],['Germany','DE'],['France','FR'],['Spain','ES'],['Brazil','BR']];
 const states=['All States','Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Florida','Georgia','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Jersey','New Mexico','New York','North Carolina','Ohio','Oklahoma','Oregon','Pennsylvania','South Carolina','Tennessee','Texas','Utah','Virginia','Washington','Wisconsin'];
 const tv=[['Famelack — Full Live TV Directory','https://famelack.com/us','Guide'],['Famelack — Series','https://famelack.com/series','Drama/Soaps'],['Famelack — Kids','https://famelack.com/kids','Kids'],['Famelack — Canada','https://famelack.com/ca','Guide'],['Famelack — United Kingdom','https://famelack.com/gb','Guide'],['Famelack — Australia','https://famelack.com/au','Guide'],['Famelack — Ireland','https://famelack.com/ie','Guide'],['Famelack — India','https://famelack.com/in','Guide'],['Famelack — Pakistan','https://famelack.com/pk','Guide'],['Famelack — Philippines','https://famelack.com/ph','Guide'],['Famelack — Mexico','https://famelack.com/mx','Guide'],['Famelack — Germany','https://famelack.com/de','Guide'],['Famelack — France','https://famelack.com/fr','Guide'],['Famelack — Spain','https://famelack.com/es','Guide'],['Famelack — Brazil','https://famelack.com/br','Guide'],['Slovenia — RTV Slovenija','https://www.rtvslo.si/tv','Culture'],['Slovakia — STVR','https://www.stvr.sk/televizia','Culture'],['Czech Republic — ČT','https://www.ceskatelevize.cz/zive/','Culture'],['Pakistan — PTV Home','https://www.ptv.com.pk/','Entertainment'],['Pakistan — PTV Sports','https://www.ptv.com.pk/','Sports'],['Pakistan — PTV News','https://www.ptv.com.pk/','News'],['Pakistan — ARY News','https://arynews.tv/','News'],['Croatia — HRT','https://glashrvatske.hrt.hr/en','Culture'],['Serbia — RTS Live','https://www.rts.rs/live/','Culture'],['Montenegro — RTCG','https://rtcg.me/tv/tv-uzivo.html','Entertainment'],['Bosnia — BHRT','https://www.bhrt.ba/','Culture'],['Radio Pakistan','https://radio.gov.pk/','Music']];
@@ -33,6 +38,49 @@ const named=[['The Bridge 91.9','https://www.bridgeradio.org/listen'],['K-Wave 1
 ['The Kansas Breeze','https://streams.radiomast.io/a2dd31a2-a524-48ce-baea-8271e1a37ab2']];
 let fullDirectory=[],fullDirectoryLoaded=false,fullDirectoryLoading=false;
 let country='US',state='All States',stations=[],favs=JSON.parse(localStorage.l2f||'[]'),custom=JSON.parse(localStorage.l2c||'[]'),music=JSON.parse(localStorage.l2m||'[]'),deleted=JSON.parse(localStorage.l2d||'[]'),cat='All',viewer='';
+function updateClock(){
+ const el=document.getElementById('localClock'); if(!el)return;
+ const now=new Date();
+ el.textContent='🕒 '+new Intl.DateTimeFormat([], {hour:'numeric',minute:'2-digit',second:'2-digit'}).format(now);
+}
+function prettyPlace(x){
+ if(!x)return 'Unknown area';
+ const stateMap={AR:'Arkansas',TN:'Tennessee',MS:'Mississippi',MO:'Missouri',KS:'Kansas',OK:'Oklahoma',TX:'Texas',CO:'Colorado',CA:'California',FL:'Florida',GA:'Georgia',AL:'Alabama',KY:'Kentucky'};
+ return (stateMap[x.region_code]||x.region||'Unknown area')+(x.country_code?', '+x.country_code:'');
+}
+async function detectApproxArea(){
+ try{
+  const r=await fetch('https://ipapi.co/json/',{cache:'no-store'}); if(!r.ok)throw new Error();
+  const g=await r.json();
+  return {country_code:g.country_code||'',region_code:g.region_code||'',region:g.region||''};
+ }catch(e){return {country_code:'',region_code:'',region:''}}
+}
+async function presenceHeartbeat(){
+ try{
+  let area=JSON.parse(localStorage.l2area||'null');
+  if(!area){area=await detectApproxArea();localStorage.l2area=JSON.stringify(area)}
+  await fetch(SUPABASE_URL+'/rest/v1/viewer_presence?on_conflict=session_id',{
+   method:'POST',headers:{...presenceHeaders,'Prefer':'resolution=merge-duplicates,return=minimal'},
+   body:JSON.stringify({session_id:presenceSession,mode:'site',country_code:area.country_code||null,region_code:area.region_code||null,last_seen:new Date().toISOString()})
+  });
+  const cutoff=new Date(Date.now()-90000).toISOString();
+  const r=await fetch(SUPABASE_URL+'/rest/v1/viewer_presence?select=country_code,region_code,last_seen&last_seen=gt.'+encodeURIComponent(cutoff),{headers:presenceHeaders,cache:'no-store'});
+  if(r.ok){
+   const rows=await r.json();
+   document.getElementById('watchingCount').textContent='👥 '+rows.length+' watching';
+   const counts={}; rows.forEach(x=>{const p=prettyPlace(x);counts[p]=(counts[p]||0)+1});
+   const places=Object.entries(counts).map(([p,n])=>n>1?p+' ('+n+')':p);
+   document.getElementById('watchingPlaces').textContent='📍 '+(places.length?places.join(' • '):'No area data');
+  }
+ }catch(e){
+  const c=document.getElementById('watchingCount'); if(c)c.textContent='👥 1 watching';
+  const p=document.getElementById('watchingPlaces'); if(p)p.textContent='📍 Your area';
+ }
+}
+function startPresence(){
+ updateClock(); setInterval(updateClock,1000);
+ presenceHeartbeat(); if(presenceTimer)clearInterval(presenceTimer); presenceTimer=setInterval(presenceHeartbeat,30000);
+}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function save(){localStorage.l2f=JSON.stringify(favs);localStorage.l2c=JSON.stringify(custom);localStorage.l2m=JSON.stringify(music);localStorage.l2d=JSON.stringify(deleted)}
 function show(id){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='tv'){loadFullDirectory();renderTV();}if(id==='radio'){renderTabs();loadRadio()}if(id==='music')renderMusic();if(id==='apps')renderApps();if(id==='favorites')renderFav();if(id==='admin'){renderAdmin();loadFullDirectory();}scrollTo(0,0)}
@@ -104,5 +152,5 @@ function renderAdmin(){
   }).join('')||'<div class="muted">No channels or stations in this section.</div>';
 }
 function deleteEntryFromButton(b){deleteEntry(b.dataset.type,b.dataset.name,b.dataset.url,Number(b.dataset.index))}
-renderTabs();renderTV();renderApps();renderMusic();renderFav();renderAdmin();
+renderTabs();renderTV();renderApps();renderMusic();renderFav();renderAdmin();startPresence();
 </script></body></html>
