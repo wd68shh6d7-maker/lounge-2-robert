@@ -108,7 +108,7 @@ async function radioCandidates(url,name){
       const u=x.url_resolved||x.url;
       const codec=String(x.codec||'').toLowerCase();
       const isAudio=/mp3|aac|ogg|opus|mpeg|audio|m3u8/.test(codec)||looksLikeRadioStream(u);
-      if(isAudio&&/^https?:\/\//i.test(u)&&!\.(m3u|pls)(\?|$)/i.test(u)&&!out.includes(u))out.push(u);
+      if(isAudio&&/^https?:\/\//i.test(u)&&!/\.(m3u|pls)(\?|$)/i.test(u)&&!out.includes(u))out.push(u);
      }
     }
    }catch(e){}
