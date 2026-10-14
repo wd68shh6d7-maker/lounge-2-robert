@@ -226,12 +226,12 @@ function browserBlocked(u){
  const adultDomains=['pornhub.com','xvideos.com','xnxx.com','redtube.com','youporn.com','xhamster.com','tube8.com','spankbang.com','brazzers.com','bangbros.com','chaturbate.com','stripchat.com','livejasmin.com','cam4.com','adultfriendfinder.com','literotica.com','hentaihaven.xxx','rule34.xxx'];
  try{
   const parsed=new URL(raw);
-  const host=parsed.hostname.replace(/^www\\./,'');
+  const host=parsed.hostname.replace(/^www\./,'');
   if(adultDomains.some(d=>host===d||host.endsWith('.'+d)))return true;
-  const searchText=decodeURIComponent((parsed.pathname+' '+parsed.search).replace(/\\+/g,' '));
-  if(/\\b(porn|pornography|x[- ]?rated|xxx|xvideos|xnxx|redtube|pornhub|youporn|xhamster|sexcam|sexvideo|adult[- ]?video|hentai|nsfw)\\b/i.test(host+' '+searchText))return true;
+  const searchText=decodeURIComponent((parsed.pathname+' '+parsed.search).replace(/\+/g,' '));
+  if(/\b(porn|pornography|x[- ]?rated|xxx|xvideos|xnxx|redtube|pornhub|youporn|xhamster|sexcam|sexvideo|adult[- ]?video|hentai|nsfw)\b/i.test(host+' '+searchText))return true;
  }catch(e){}
- return /\\b(porn|pornography|x[- ]?rated|xxx|xvideos|xnxx|redtube|pornhub|youporn|xhamster|sexcam|sexvideo|adult[- ]?video|hentai|nsfw)\\b/i.test(raw);
+ return /\b(porn|pornography|x[- ]?rated|xxx|xvideos|xnxx|redtube|pornhub|youporn|xhamster|sexcam|sexvideo|adult[- ]?video|hentai|nsfw)\b/i.test(raw);
 }
 function browserResolve(u){
  u=(u||'').trim(); if(!u)return '';
