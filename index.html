@@ -215,7 +215,7 @@ async function loadFamelackCountry(code){
  }catch(e){
   if(token===famelackLoadToken&&status)status.textContent='Could not load that country right now. Existing channels are still available.';
  }finally{
-  if(token===famelackLoadToken){famelackLoading=false;renderTV();}
+  if(token===famelackLoadToken){famelackLoading=false;renderTV();if(document.querySelector('#admin.active'))renderAdmin();}
  }
 }
 async function loadFullDirectory(){
@@ -258,7 +258,7 @@ function renderTV(){
  let base=[...tv.filter(x=>!deleted.includes(key(x[0],x[1]))),...custom.filter(x=>x.type==='tv').map(x=>[x.name,x.url,x.category||'Culture'])].filter(x=>x[0]!=='Full Live TV Directory');
  let regular=base.filter(x=>(cat==='All'||cat==='Full Directory'||x[2]===cat)&&x[0].toLowerCase().includes(q));
  let directory=fullDirectory.filter(x=>!deleted.includes(key(x[0],x[1]))&&x[0].toLowerCase().includes(q));
- let world=famelackChannels.filter(x=>x.name.toLowerCase().includes(q)||x.languages.toLowerCase().includes(q)).map(x=>[x.name,x.url,'Famelack · '+famelackCountryCode.toUpperCase(),x]);
+ let world=famelackChannels.filter(x=>!deleted.includes(key(x.name,x.url))&&(x.name.toLowerCase().includes(q)||x.languages.toLowerCase().includes(q))).map(x=>[x.name,x.url,'Famelack · '+famelackCountryCode.toUpperCase(),x]);
  let intro='';
  if(cat==='All'||cat==='Full Directory'){
   let body=fullDirectoryLoading?'<div class="card muted">Loading the existing channel guide…</div>':directory.map(x=>tvCard(x,'Existing Guide')).join('');
@@ -335,13 +335,14 @@ function browserHome(){browserNavigate('https://www.google.com/webhp?igu=1&safe=
 function deleteEntry(type,name,url,index){let k=key(name,url);if(type==='custom')custom.splice(index,1);else if(!deleted.includes(k))deleted.push(k);save();renderAdmin();renderTV();renderRadio()}function restoreDeleted(){deleted=[];save();renderAdmin();renderTV();renderRadio()}function addCustom(){let n=document.getElementById('cn').value.trim(),u=document.getElementById('cu').value.trim(),t=document.getElementById('ct').value;if(!n||!/^https?:\/\//i.test(u))return alert('Enter a name and http/https URL.');custom.push({name:n,url:u,type:t});save();renderAdmin();renderTV();renderRadio();document.getElementById('cn').value='';document.getElementById('cu').value=''}
 let adminCat='All'; let adminDirectoryOpen=false;
 function renderAdmin(){
-  let builtTV=[...tv.filter(x=>x[0]!=='Full Live TV Directory'),...fullDirectory.map(x=>[x[0],x[1],x[2]])]
+  let builtTV=[...tv.filter(x=>x[0]!=='Full Live TV Directory'),...fullDirectory.map(x=>[x[0],x[1],x[2]]),...famelackChannels.map(x=>[x.name,x.url,'Famelack'])]
     .filter((x,i,a)=>a.findIndex(y=>y[0]===x[0]&&y[1]===x[1])===i)
     .map(x=>({type:'tv',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1])),isDir:fullDirectory.some(d=>d[0]===x[0]&&d[1]===x[1])}));
   let builtRadio=named.map(x=>({type:'radio',name:x[0],url:x[1],deleted:deleted.includes(key(x[0],x[1])),isDir:false}));
   let customItems=custom.map((x,i)=>({type:x.type,name:x.name,url:x.url,index:i,deleted:false,isDir:false}));
   let all=[...builtTV,...builtRadio,...customItems].filter(x=>adminCat==='All'||x.type===adminCat);
   document.getElementById('adminCats').innerHTML=['All','tv','radio'].map(x=>'<button class="'+(adminCat===x?'active':'')+'" onclick="adminCat=\''+x+'\';renderAdmin()">'+(x==='All'?'All':x==='tv'?'📺 TV Channels':'📻 Radio Stations')+'</button>').join('');
+  if((adminCat==='All'||adminCat==='tv')&&!famelackLoading&&!famelackChannels.length){loadFamelackCountry(famelackCountryCode||'us');}
   let html='';
   if(adminCat==='All'||adminCat==='tv'){
     if(!fullDirectoryLoaded&&!fullDirectoryLoading){
