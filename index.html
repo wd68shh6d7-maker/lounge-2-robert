@@ -252,7 +252,7 @@ function playTV(url,name){
 }
 function renderTV(){
  let cats=['All','Guide','News','Entertainment','Drama/Soaps','Sports','Music','Kids','Culture','Full Directory'];
- document.getElementById('tvCats').innerHTML=cats.map(x=>'<button class="'+(cat===x?'active':'')+'" onclick="cat=\\''+x+'\\';renderTV()">'+x+'</button>').join('');
+ document.getElementById('tvCats').innerHTML=cats.map(x=>'<button class="'+(cat===x?'active':'')+'" onclick="cat=\''+x+'\';renderTV()">'+x+'</button>').join('');
  let q=(document.getElementById('tvq')?.value||'').toLowerCase();
  let base=[...tv.filter(x=>!deleted.includes(key(x[0],x[1]))),...custom.filter(x=>x.type==='tv').map(x=>[x.name,x.url,x.category||'Culture'])].filter(x=>x[0]!=='Full Live TV Directory');
  let regular=base.filter(x=>(cat==='All'||cat==='Full Directory'||x[2]===cat)&&x[0].toLowerCase().includes(q));
