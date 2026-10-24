@@ -372,4 +372,34 @@ document.getElementById('browserFrame').src='https://www.google.com/webhp?igu=1&
 window.addEventListener('keydown',e=>{if(e.key==='Escape')closePlayer()});
 try{renderTabs()}catch(e){console.error(e)} try{renderTV()}catch(e){console.error(e)} try{renderApps()}catch(e){console.error(e)} try{renderMusic()}catch(e){console.error(e)} try{renderFav()}catch(e){console.error(e)} try{renderAdmin()}catch(e){console.error(e)} try{startPresence()}catch(e){console.error(e)}
 if(location.hash){const id=location.hash.slice(1);if(document.getElementById(id))show(id)}
-</script></body></html>
+</script><script>
+/* Privacy-conscious site analytics: no IPs, full URLs, form text, or input contents. */
+(function(){
+  if(window.__siteAnalyticsLoaded)return;
+  window.__siteAnalyticsLoaded=true;
+  const endpoint="https://doxzuuzzcxaozkyojybu.supabase.co/rest/v1/rpc/record_site_analytics";
+  const apiKey="sb_publishable_U2DbudIt9o0D8UO1R0hWuw_yTsJBPFq";
+  const siteKey="a-place-to-chill";
+  let sessionId;
+  try {
+    sessionId=sessionStorage.getItem("site_analytics_session");
+    if(!sessionId){sessionId=crypto.randomUUID();sessionStorage.setItem("site_analytics_session",sessionId);}
+  } catch(e) { sessionId=crypto.randomUUID(); }
+  let ended=false;
+  function send(type,key,keepalive){
+    const body=JSON.stringify({p_site_key:siteKey,p_session_id:sessionId,p_event_type:type,p_event_key:key||null});
+    fetch(endpoint,{method:"POST",headers:{"apikey":apiKey,"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},body,keepalive:!!keepalive,credentials:"omit"}).catch(function(){});
+  }
+  send("session_start","site");
+  send("page_view","home");
+  document.addEventListener("click",function(event){
+    const el=event.target && event.target.closest ? event.target.closest("button,a,[role=button]") : null;
+    if(!el || el.closest("[data-analytics-ignore]"))return;
+    const label=(el.innerText||el.getAttribute("aria-label")||el.getAttribute("title")||"").replace(/\s+/g," ").trim().slice(0,65);
+    if(label)send("click",(el.tagName.toLowerCase()+": "+label).slice(0,80));
+  },true);
+  setInterval(function(){if(!document.hidden&&!ended)send("heartbeat","visible");},60000);
+  window.addEventListener("pagehide",function(){if(!ended){ended=true;send("session_end","pagehide",true);}});
+})();
+</script>
+</body></html>
